@@ -1,0 +1,48 @@
+---
+title: "HRP 203 Final Project"
+author: "Genna Campain"
+date: "5/28/24"
+format:
+  pdf:
+    toc: false
+    number-sections: false
+    colorlinks: true
+---
+
+## Assignment Description
+
+Create a 4 to 6 page Quarto reproducible document to synthesize concepts learned throughout the course and particularly from Module 3. Create the report in a repository on your GitHub account based on the cohort simulated data. Include the following features: introduction section, methods section with notation, results section with data summary table and at least 2 figures, discussion. The assignment is due at 11am Pacific time on Monday, June 10th.
+
+## Introduction
+
+## Methods
+
+For this project, I will be using a variety of packages which I load in the code chunk below.
+
+```{r}
+#| message: false
+#| warning: false
+library(dplyr)
+# skewness function
+library(e1071)
+# coefficient plots
+library(coefplot)
+```
+
+I will be using the `cohort` simulated data set provided through the course GitHub repository. A copy of this data set can be found in the `Data` folder in the GitHub repository for this project.
+
+## Results
+
+First,
+
+### Data Summary Table
+
+### Figure 1
+
+### Figure 2
+
+## Discussion
+
+```{r}
+1 + 1
+```
