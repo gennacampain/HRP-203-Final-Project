@@ -17,32 +17,102 @@ Create a 4 to 6 page Quarto reproducible document to synthesize concepts learned
 
 ## Methods
 
-For this project, I will be using a variety of packages which I load in the code chunk below.
+For the data analysis, I used the `cohort` simulated data set provided through the course GitHub repository. A copy of this data set can be found in the `Data` folder in the GitHub [repository](https://github.com/gennacampain/HRP-203-Final-Project/) for this project.
 
 ```{r}
 #| message: false
 #| warning: false
+#| echo: false
 library(dplyr)
+library(ggplot2)
 # skewness function
 library(e1071)
 # coefficient plots
 library(coefplot)
 ```
 
-I will be using the `cohort` simulated data set provided through the course GitHub repository. A copy of this data set can be found in the `Data` folder in the GitHub repository for this project.
+```{r}
+#| echo: false
+cohort <- read.csv("Data/cohort.csv") %>%
+  select(smoke, female, cardiac, age, cost)
+head(cohort)
+```
+
+I included all of the variables from the data set in my analysis. Since documentation was not provided, I made assumptions about the meanings of the variables. These assumptions are outlined in Table 1.
+
+Table 1: Definitions for five variables included in analysis
+
+| Variable Name | Description                                                                                                  |
+|----------------------|-------------------------------------------------|
+| `smoke`       | indicator variable, equal to 1 if the patient smokes regularly (more than three times per week) and 0 if not |
+| `female`      | indicator variable, equal to 1 if the patient's sex is designated as female and 0 if not                     |
+| `cardiac`     | indicator variable, equal to 1 if the patient has a diagnosis of a cardiac-related problem and 0 if not      |
+| `age`         | numeric variable, indicates the patient's age in years                                                       |
+| `cost`        | numeric variable, indicates the cost (in USD) of all healthcare visits for a given patient in a given year   |
+
+I started the analysis with descriptive statistics for the five variables of interest.
+
+For the next part of the analysis, I ran a regression to examine how an individual's smoking habits, sex, cardiac history, and age can be used to predict their yearly healthcare costs. I used the `lm()` function with the following equation: $$cost = \beta_{0} + \beta_{1}smoke + \beta_{2}female + \beta_{3}cardiac + \beta_{4}age $$
+
+Finally, I generated predicted spending amounts for
 
 ## Results
 
-First,
-
 ### Data Summary Table
+
+```{r}
+varnames <- as.matrix(names(cohort), nrow = 5, ncol = 1)
+meanmat <- matrix(data = 0, nrow = 5, ncol = 1)
+sdmat <- matrix(data = 0, nrow = 5, ncol = 1)
+minmaxmat <- matrix(data = NA, nrow = 5, ncol = 2)
+skewmat <- matrix(data = NA, nrow = 5)
+for(i in 1:5){
+  meanmat[i] <- round(mean(cohort[,i]), digits = 5)
+  sdmat[i] <- round(sd(cohort[,i]), digits = 5)
+  minmaxmat[i,1] <- round(min(cohort[,i]), digits = 5)
+  minmaxmat[i,2] <- round(max(cohort[,i]), digits = 5)
+  skewmat[i] <- round(skewness(cohort[,i]), digits = 5)
+}
+table <- cbind(varnames, minmaxmat, meanmat, sdmat, skewmat)
+colnames(table) <- list("Variable", "Min", "Max", "Mean", "SD", "Skewness")
+as.data.frame(table)
+```
+
+```{r}
+table(cohort$female, cohort$cardiac)
+```
+
+
 
 ### Figure 1
 
+```{r}
+# cost regression
+reg1 <- lm(cost ~ cardiac + smoke + age + female, data = cohort)
+summary(reg1)
+```
+
+```{r}
+coeffig <- coefplot(reg1, 
+                    title = "Coefficients for Linear Regression",
+                    color = "Maroon")
+coeffig
+```
+
 ### Figure 2
+
+```{r}
+# make predictions
+cohort$predict_cost <- predict(reg1, cohort)
+cohort$residuals_cost <- cohort$cost - cohort$predict_cost
+```
+
+```{r}
+# plot residuals by sex
+ggplot(cohort, aes(cost, residuals_cost)) +
+  geom_point(aes(color = as.factor(female)))
+```
+
 
 ## Discussion
 
-```{r}
-1 + 1
-```
