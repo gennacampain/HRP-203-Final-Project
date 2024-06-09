@@ -1,7 +1,7 @@
 ---
 title: "HRP 203 Final Project"
 author: "Genna Campain"
-date: "5/28/24"
+date: 6/9/24"
 format:
   pdf:
     toc: false
@@ -9,15 +9,13 @@ format:
     colorlinks: true
 ---
 
-## Assignment Description
-
-Create a 4 to 6 page Quarto reproducible document to synthesize concepts learned throughout the course and particularly from Module 3. Create the report in a repository on your GitHub account based on the cohort simulated data. Include the following features: introduction section, methods section with notation, results section with data summary table and at least 2 figures, discussion. The assignment is due at 11am Pacific time on Monday, June 10th.
-
 ## Introduction
+
+In the United States, healthcare spending makes up a large portion of GDP, equal to about 17.3% in 2022 [(Statista, 2024)](https://www.statista.com/statistics/184968/us-health-expenditure-as-percent-of-gdp-since-1960/#:~:text=U.S.%20health%20expenditure%20as%20percent%20of%20GDP%201960%2D2022&text=In%202022%2C%20U.S.%20national%20health,GDP%20share%20among%20developed%20countries.). For the majority of individuals, these expenditures are covered at least partly by some type of public or private insurance which (loosely) allows individuals to pay monthly premiums in exchange for coverage of medical expenses [(KFF, 2023)](https://www.kff.org/uninsured/issue-brief/key-facts-about-the-uninsured-population/). Coverage of this form gives individuals a buffer against the potentially ruinous costs of a serious medical condition and allows risk-sharing among all insured individuals on the same plan (or insured by the same entity in some cases) [(American Academy of Actuaries, 2024)](https://www.actuary.org/content/risk-pooling-how-health-insurance-individual-market-works-0). However, this risk-sharing relies on the plan (or entity) budget balancing over time (so that the money coming in from premiums must equal the money paid out for medical expenses). With many insurers, plan enrollment and premium setting occur at the beginning of a plan year, so insurers must balance the budget based on *predicted* expenditures. In this paper, I consider one model that predicts individual health expenditures based on individuals' characteristics and pre-existing conditions.
 
 ## Methods
 
-For the data analysis, I used the `cohort` simulated data set provided through the course GitHub repository. A copy of this data set can be found in the `Data` folder in the GitHub [repository](https://github.com/gennacampain/HRP-203-Final-Project/) for this project.
+For the data analysis, I used the `cohort` simulated data set provided through the course GitHub repository. A copy of this data set can be found in the `Data` folder in the GitHub [repository](https://github.com/gennacampain/HRP-203-Final-Project/) for this project. The table below shows the first six rows of the data set.
 
 ```{r}
 #| message: false
@@ -43,24 +41,29 @@ I included all of the variables from the data set in my analysis. Since document
 Table 1: Definitions for five variables included in analysis
 
 | Variable Name | Description                                                                                                  |
-|----------------------|-------------------------------------------------|
+|--------------------------|----------------------------------------------|
 | `smoke`       | indicator variable, equal to 1 if the patient smokes regularly (more than three times per week) and 0 if not |
 | `female`      | indicator variable, equal to 1 if the patient's sex is designated as female and 0 if not                     |
 | `cardiac`     | indicator variable, equal to 1 if the patient has a diagnosis of a cardiac-related problem and 0 if not      |
 | `age`         | numeric variable, indicates the patient's age in years                                                       |
 | `cost`        | numeric variable, indicates the cost (in USD) of all healthcare visits for a given patient in a given year   |
 
-I started the analysis with descriptive statistics for the five variables of interest.
+I started the analysis with descriptive statistics for the five variables of interest. I examined the mean, standard deviation, minimum and maximum values, and skewness of each variable to get an idea of the type of variation available in the data set.
 
 For the next part of the analysis, I ran a regression to examine how an individual's smoking habits, sex, cardiac history, and age can be used to predict their yearly healthcare costs. I used the `lm()` function with the following equation: $$cost = \beta_{0} + \beta_{1}smoke + \beta_{2}female + \beta_{3}cardiac + \beta_{4}age $$
 
-Finally, I generated predicted spending amounts for
+Finally, I generated predicted spending amounts for each individual using the model and calculated the residuals to assess the model fit: $$residuals = cost_{observed} -  cost_{predicted}$$.
 
 ## Results
 
 ### Data Summary Table
 
+The table below shows the summary statistics for the five variables included in the model. In the sample of 5,000 individuals, approximately 10% of individuals smoke, 49% are female, and 4% have previous history of a cardiac problem. The average age of the sampled individuals is 41, although adults of all ages who might have private insurance (18 to 65) are included. The mean spending is \$9,672, with a maximum spending amount of \$11,326 and a minimum spending amount of \$8,478.
+
+While the characteristics of the individuals in the data set seem fairly representative of the privately insured population with respect to age and sex, the fact that no individuals have \$0 spending in the data set might limit the applicability of the model to populations with low levels of spending (i.e. insurers with fairly young insured populations).
+
 ```{r}
+#| echo: false
 varnames <- as.matrix(names(cohort), nrow = 5, ncol = 1)
 meanmat <- matrix(data = 0, nrow = 5, ncol = 1)
 sdmat <- matrix(data = 0, nrow = 5, ncol = 1)
@@ -78,21 +81,22 @@ colnames(table) <- list("Variable", "Min", "Max", "Mean", "SD", "Skewness")
 as.data.frame(table)
 ```
 
-```{r}
-table(cohort$female, cohort$cardiac)
-```
-
-
-
 ### Figure 1
 
+The regression output table and coefficient plot below show the coefficients and associated standard errors for the four predictors in the model. Overall, the model performance seems adequate for the limited amount of information available. All of the included variables are significant predictors of cost at the 95% level, with very small standard errors compared to the magnitude of the coefficient. The estimated coefficients represent meaningful associations (i.e the change in cost associated with the change in a predictor is by a nontrivial amount) and the model itself explains a large portion (76%) of the overall variation in cost.
+
+Regarding the individual coefficients, smoking is associated with the largest increase in cost of \$592, following by being male (\$294) and then having a cardiac condition (\$289). The age variable has the smallest magnitude relationship, as an additional year of age is associated with only an \$18 increase in costs. However, since this \$18 is per year, the cumulative effect as individuals age is far greater.
+
 ```{r}
+#| echo: false
 # cost regression
 reg1 <- lm(cost ~ cardiac + smoke + age + female, data = cohort)
-summary(reg1)
+as.data.frame(summary(reg1)$coefficients)
+print(paste0("Adjusted R^2: ", round((summary(reg1)$adj.r.squared),3)))
 ```
 
 ```{r}
+#| echo: false
 coeffig <- coefplot(reg1, 
                     title = "Coefficients for Linear Regression",
                     color = "Maroon")
@@ -101,18 +105,23 @@ coeffig
 
 ### Figure 2
 
+The scatterplot below shows the residuals for the model, plotted against the observed cost values. Ideally, the negative and positive residuals would be equally distributed at all values of observed cost. However, the residuals for this model have a clear upward trend as cost increases, indicating that the model is underpredicting high cost values and overpredicting low cost values. Allowing for a more flexible model fit might help resolve this problem, although it comes with the risk of overfitting.
+
 ```{r}
+#| echo: false
 # make predictions
 cohort$predict_cost <- predict(reg1, cohort)
 cohort$residuals_cost <- cohort$cost - cohort$predict_cost
 ```
 
 ```{r}
-# plot residuals by sex
+#| echo: false
+# plot residuals
 ggplot(cohort, aes(cost, residuals_cost)) +
-  geom_point(aes(color = as.factor(female)))
+  geom_point(color="maroon") +
+  ggtitle("Observed-Predicted Cost for 5000 Individuals", "USD")
 ```
-
 
 ## Discussion
 
+In this paper, I have demonstrated one potential model that can be used to predict patient health expenditures based on patient characteristics and pre-existing health conditions. This type of model could be of use to insurers seeking to predict future expenditures for budgetary purposes, or for individuals trying to predict their own health expenditures when choosing between plan types. The model has decent predictive power even though it only includes four variables and a very simple specification. This simplicity has both benefits and limitations. The main benefits are that the simple specification makes the model very easy to interpret and understand, and the included variables are easy for insurers or patients to collect or observe. The main drawback is that the model fit is adequate but may not be good enough for some applications. It is not hard to imagine that a much better fit could be achieved by adding a few additional variables, especially with the significant amount of data on healthcare use that is available to insurers. Future work could focus on expanding the number of variables included, or on incorporating more advanced techniques for fitting the model.
